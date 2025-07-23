@@ -372,6 +372,7 @@ def join_sample_attributions(
                         drop_duplicates=True
                     )
                     for ls in s.label_column_attributions
+                    if ls.label_attributions and len(ls.label_attributions) > label_idx
                 }
             )
             for s in all_samples
