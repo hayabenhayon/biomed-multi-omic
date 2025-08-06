@@ -68,6 +68,7 @@ class BatchIntegrationCallback(pl.Callback):
         self,
         batch_column_name=None,
         counts_column_name=None,
+        target_column_name=None,
         benchmarking_methods=[
             "Unintegrated",
             "Scanorama",
@@ -78,6 +79,7 @@ class BatchIntegrationCallback(pl.Callback):
         super().__init__()
         self.batch_column_name = batch_column_name
         self.counts_column_name = counts_column_name
+        self.target_column_name = target_column_name
         self.benchmarking_methods = benchmarking_methods
 
     def on_predict_end(self, trainer: pl.Trainer, pl_module: pl.LightningModule):
@@ -91,7 +93,8 @@ class BatchIntegrationCallback(pl.Callback):
         self.report_batch_integartion_to_clearml(adata_emb)
 
     def verify_batch_column_name(self, trainer):
-        self.target_column_name = trainer.datamodule.label_columns[0].label_column_name
+        if self.target_column_name is None:
+            self.target_column_name = trainer.datamodule.label_columns[0].label_column_name
         if self.batch_column_name is None:
             return self.target_column_name
         else:
