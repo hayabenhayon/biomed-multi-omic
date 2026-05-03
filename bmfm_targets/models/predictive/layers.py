@@ -294,7 +294,8 @@ def get_embeddings_from_outputs(outputs, attention_mask, pooling_method):
         last_hidden_states = outputs.hidden_states[-1]
         # use everything except CLS token
         return masked_mean(last_hidden_states[:, 1:, :], attention_mask[:, 1:])
-    elif isinstance(pooling_method, int):
+    elif isinstance(pooling_method, str) and pooling_method.isdigit():
+        pooling_method = int(pooling_method)
         decode_index = pooling_method
         last_hidden_states = outputs.hidden_states[-1]
         return last_hidden_states[:, decode_index, :]
