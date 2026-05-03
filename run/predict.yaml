@@ -1,7 +1,6 @@
 defaults:
   - data_module: base_seq_cls
   - task: predict
-  - trainer: default
   - _self_
 
 seed:
@@ -11,11 +10,14 @@ data_module:
   max_length: 1024
   dataset_kwargs:
     processed_data_source: ${input_file}
-    label_dict_path: ${working_dir}/labels.json
+    label_dict_path: /sci/backup/dandanbz/haya.benhayon/IBM/biomed-multi-omic/label_dict_all_celstype_condition_alpha.json
   limit_genes: protein_coding #could be null, protein_coding, or tokenizer
   transform_datasets: false
   collation_strategy: multitask
   log_normalize_transform: true
+
+
+
 
 task:
   checkpoint: ${checkpoint}
@@ -23,10 +25,16 @@ task:
   output_predictions: true
   default_root_dir: ${working_dir}
 
-trainer:
-  pooling_method: pooling_layer # set to token index for multiple cls decoding
+track_clearml:
+  project_name: predict
+  task_name: ${file_name}
+  continue_last_task: false
 
 accelerator: gpu
-input_file: null
-working_dir: /tmp
+input_file: /sci/backup/dandanbz/haya.benhayon/IBM/Seurat/Alpha_T1D_healthy/binned_vs_continues/run4_alpha_cells_RNA_metadata_codinggenes.h5ad
+working_dir: /sci/backup/dandanbz/haya.benhayon/IBM/predict_biomed/test_5_8/
 checkpoint: null
+target_column_name: Condition
+batch_column_name: sample
+counts_column_name: nFeature_RNA
+file_name: test_5_8
