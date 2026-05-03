@@ -2,14 +2,31 @@
   field_name: "genes"
   pretrained_embedding: null
   is_masked: true
+  tokenization_strategy: tokenize
+  decode_modes:
+    token_scores: {}
+
 - _target_: bmfm_targets.config.FieldInfo
   field_name: "expressions"
   pretrained_embedding: null
   is_masked: true
   tokenization_strategy: continuous_value_encoder
-  continuous_value_encoder_kwargs:
+  encoder_kwargs:
     kind: "mlp_with_special_token_embedding"
     zero_as_special_token: true
-    decode_modes:
-    - "regression"
-    - "is_zero"
+  decode_modes:
+    regression: {}
+    is_zero: {}
+
+- _target_: bmfm_targets.config.FieldInfo
+  field_name: "label_expressions"
+  pretrained_embedding: null
+  is_masked: true
+  tokenization_strategy: continuous_value_encoder
+  is_input: false
+  encoder_kwargs:
+    kind: "mlp_with_special_token_embedding"
+    zero_as_special_token: true
+  decode_modes:
+    regression: {}
+    is_zero: {}
