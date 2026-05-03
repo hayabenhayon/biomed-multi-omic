@@ -8,3 +8,4 @@ betas:
 epsilon: 1.0e-8
 lr_decay_steps: null
 batch_prediction_behavior: track
+pooling_method: pooling_layer
