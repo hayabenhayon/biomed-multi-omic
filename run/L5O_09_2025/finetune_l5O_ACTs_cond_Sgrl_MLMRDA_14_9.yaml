@@ -1,0 +1,78 @@
+defaults:
+  - data_module: base_seq_cls
+  - task: train
+  - model: scbert
+  - trainer: default
+  - _self_
+
+seed:
+  seed_value: 1234
+
+label_columns:
+  - _target_: bmfm_targets.config.LabelColumnInfo
+    label_column_name: "condition_alpha"
+    is_regression_label: false
+    n_unique_values: 3
+    silent_label_values: ['No_Condition']
+  - _target_: bmfm_targets.config.LabelColumnInfo
+    label_column_name: "celltypes"
+    is_regression_label: false
+    n_unique_values: 5
+  - _target_: bmfm_targets.config.LabelColumnInfo
+    label_column_name: "sample"
+    is_regression_label: false
+    n_unique_values: 58
+    gradient_reversal_coefficient: "${gradient_reversal_coefficient}"
+
+
+
+data_module:
+  max_length: 2048
+  batch_size: 32 
+  num_workers: 4
+  dataset_kwargs:
+    processed_data_source: ${input_file}
+    label_dict_path: /sci/backup/dandanbz/haya.benhayon/IBM/biomed-multi-omic/label_dict_subs.json
+    split_column_name: L5O_${L5O_sample}
+  limit_genes: protein_coding #could be null, protein_coding, or tokenizer
+  transform_datasets: false
+  collation_strategy: sequence_classification
+  log_normalize_transform: true
+  balancing_label_column: ['Condition','Gender']
+  balancing_val_label_column: Condition
+
+trainer:
+  learning_rate: 1.0e-5
+  metrics:
+   - name: accuracy
+   - name: f1
+   - name: precision
+   - name: recall
+  losses:
+   - label_column_name: "condition_alpha"
+     name: cross_entropy # focal also supported, or mse if column is a regression_label
+   - label_column_name: "celltypes"
+     name: cross_entropy
+   - label_column_name: "sample"
+     name: cross_entropy
+  batch_prediction_behavior: null
+
+  
+track_clearml:
+  project_name: "ACTs_bmfm-l5o"
+  task_name: ${new_file_name}
+  continue_last_task: False
+
+gradient_reversal_coefficient: 0
+file_name: delete
+L5O_sample: del
+new_file_name: ${L5O_sample}_${file_name}
+accelerator: gpu
+input_file: null
+work_path: /tmp
+working_dir: ${work_path}/${new_file_name}
+checkpoint: null
+split_column_name: null # a column with strings "train", "dev", "test"
+max_epochs: 6
+val_check_interval: 0.2 # see https://lightning.ai/docs/pytorch/stable/common/trainer.html#val-check-interva
+checkpoints_every_n_train_steps: null

@@ -1,0 +1,32 @@
+defaults:
+  - data_module: base_seq_cls
+  - task: predict
+  - trainer: default
+  - _self_
+
+seed:
+  seed_value: 1234
+
+data_module:
+  max_length: 1024
+  dataset_kwargs:
+    processed_data_source: ${input_file}
+    label_dict_path: ${working_dir}/labels.json
+  limit_genes: protein_coding #could be null, protein_coding, or tokenizer
+  transform_datasets: false
+  collation_strategy: multitask
+  log_normalize_transform: true
+
+task:
+  checkpoint: ${checkpoint}
+  output_embeddings: true
+  output_predictions: true
+  default_root_dir: ${working_dir}
+
+trainer:
+  pooling_method: pooling_layer # set to token index for multiple cls decoding
+
+accelerator: gpu
+input_file: null
+working_dir: /tmp
+checkpoint: null

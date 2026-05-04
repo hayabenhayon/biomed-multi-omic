@@ -1,0 +1,46 @@
+defaults:
+  - data_module: base_seq_cls
+  - _self_
+
+seed:
+  seed_value: 1234
+
+
+
+data_module:
+  dataset_kwargs:
+    processed_data_source: /sci/backup/dandanbz/haya.benhayon/IBM/Seurat/all_celltypes/tmp2.h5ad
+    label_dict_path: /sci/backup/dandanbz/haya.benhayon/IBM/biomed-multi-omic/label_dict_subs.json
+  _partial_: true
+  num_workers: 4
+  collation_strategy: "sequence_classification"
+  max_length: 4096
+  sequence_order: random
+  #pad_to_multiple_of: 16
+  #limit_dataset_samples: 10
+  #data_dir: sci/backup/dandanbz/haya.benhayon/IBM/finetune_bimed/ACT_l50/ACTsW2_condW2_S2grlW1_MLMRDA_hvg4096_4_12_rawRP_HC2/H055_ACTsW2_condW2_S2grlW1_MLMRDA_hvg4096_4_12_rawRP_HC2
+  transform_datasets: false
+  rda_transform: auto_align
+
+
+task:
+  #epochs will be force set to 1 no matter what is requested
+  _target_: bmfm_targets.config.InterpretTaskConfig
+  default_root_dir: ${working_dir}
+  accelerator: "gpu"
+  precision: "16-mixed"
+  attribute_kwargs:
+    n_steps: 50
+  attribute_filter:
+    condition_alpha: ["T1DM"]
+    sample: []
+    celltypes: []
+  tf32_mode: "medium" # permitted nonNone values of tf32_mode:  "highest","high","medium"
+   # fill this in with a post April 9 2024 ckpt or add model, fields and tokenizer sections
+  checkpoint: ${checkpoint}
+
+
+accelerator: gpu
+input_file: /sci/backup/dandanbz/haya.benhayon/IBM/Seurat/Alpha_T1D_healthy/binned_vs_continues/run4_alpha_cells_RNA_metadata_codinggenes.h5ad
+working_dir: /sci/backup/dandanbz/haya.benhayon/IBM/predict_biomed/test_4_9/
+checkpoint: null

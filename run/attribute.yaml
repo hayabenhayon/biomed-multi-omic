@@ -1,0 +1,34 @@
+defaults:
+  - data_module: base_seq_cls
+
+seed:
+  seed_value: 1234
+
+data_module:
+  dataset_kwargs:
+    processed_data_source: /sci/backup/dandanbz/haya.benhayon/IBM/Seurat/all_celltypes/tmp2.h5ad
+    label_dict_path: /sci/backup/dandanbz/haya.benhayon/IBM/biomed-multi-omic/label_dict_subs.json
+  _partial_: true
+  num_workers: 8
+  collation_strategy: "sequence_classification"
+  max_length: 512
+  sequence_order: random
+  pad_to_multiple_of: 16
+  limit_dataset_samples: 10
+  #data_dir: sci/backup/dandanbz/haya.benhayon/IBM/finetune_bimed/ACT_l50/ACTsW2_condW2_S2grlW1_MLMRDA_hvg4096_4_12_rawRP_HC2/H055_ACTsW2_condW2_S2grlW1_MLMRDA_hvg4096_4_12_rawRP_HC2
+  transform_datasets: false
+
+task:
+  #epochs will be force set to 1 no matter what is requested
+  _target_: bmfm_targets.config.InterpretTaskConfig
+  default_root_dir: /sci/backup/dandanbz/haya.benhayon/IBM/finetune_bimed/ACT_l50/ACTsW2_condW2_S2grlW1_MLMRDA_hvg4096_4_12_rawRP_HC2/H055_ACTsW2_condW2_S2grlW1_MLMRDA_hvg4096_4_12_rawRP_HC2/interpret_13_11
+  accelerator: "gpu"
+  precision: "16-mixed"
+  attribute_kwargs:
+    n_steps: 50
+  attribute_filter:
+    condition_alpha: ["T1DM"]
+  tf32_mode: "medium" # permitted nonNone values of tf32_mode:  "highest","high","medium"
+   # fill this in with a post April 9 2024 ckpt or add model, fields and tokenizer sections
+  checkpoint: /sci/backup/dandanbz/haya.benhayon/IBM/finetune_bimed/ACT_l50/ACTsW2_condW2_S2grlW1_MLMRDA_hvg4096_4_12_rawRP_HC2/H055_ACTsW2_condW2_S2grlW1_MLMRDA_hvg4096_4_12_rawRP_HC2/last.ckpt
+

@@ -1,0 +1,11 @@
+export MY_DATA_FILE=/sci/backup/dandanbz/haya.benhayon/IBM/Seurat/all_celltypes/run6_from_start_with_metadata_allcelltypes_minimal_codinggenes_condition_alpha_sub700.h5ad
+python
+>>> from os import environ
+>>> import scanpy as sc
+>>> import bmfm_targets.datasets.datasets_utils as du
+>>>
+>>> ada = sc.read_h5ad(environ["MY_DATA_FILE"])
+>>> ada.obs["split_random"] = du.get_random_split(ada.obs, {"train":0.8, "dev": 0.1, "test": 0.1},random_state=42)
+>>> import anndata as ad
+>>> ada = ad.AnnData(X=ada.X, obs=ada.obs, var=ada.var)
+>>> ada.write_h5ad("/sci/backup/dandanbz/haya.benhayon/IBM/Seurat/all_celltypes/run6_from_start_with_metadata_allcelltypes_minimal_codinggenes_condition_alpha_sub700_plit.h5ad", compression="gzip")

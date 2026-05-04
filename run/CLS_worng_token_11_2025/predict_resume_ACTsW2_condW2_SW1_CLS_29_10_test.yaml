@@ -1,0 +1,67 @@
+defaults:
+  - data_module: base_seq_cls
+  - task: predict
+  - _self_
+
+seed:
+  seed_value: 1234
+
+label_columns:
+  - _target_: bmfm_targets.config.LabelColumnInfo
+    label_column_name: "condition_alpha"
+    is_regression_label: false
+    n_unique_values: 3
+    silent_label_values: ['No_Condition']
+    decode_from: 2
+  - _target_: bmfm_targets.config.LabelColumnInfo
+    label_column_name: "celltypes"
+    is_regression_label: false
+    n_unique_values: 5
+    decode_from: 1
+  - _target_: bmfm_targets.config.LabelColumnInfo
+    label_column_name: "sample"
+    is_regression_label: false
+    n_unique_values: 58
+    decode_from: 4
+  - _target_: bmfm_targets.config.LabelColumnInfo
+    label_column_name: "Gender"
+    is_regression_label: false
+    n_unique_values: 2
+    decode_from: 3
+
+
+data_module:
+  max_length: "${max_length}"
+  dataset_kwargs:
+    processed_data_source: ${input_file}
+    label_dict_path: /sci/backup/dandanbz/haya.benhayon/IBM/biomed-multi-omic/label_dict_subs.json
+  limit_genes: protein_coding #could be null, protein_coding, or tokenizer
+  transform_datasets: false
+  collation_strategy: multitask
+  log_normalize_transform: true
+
+
+
+task:
+  checkpoint: ${checkpoint}
+  output_embeddings: true
+  output_predictions: true
+  default_root_dir: ${working_dir}
+  callbacks:
+   - _target_: bmfm_targets.training.callbacks.BatchIntegrationCallback
+     batch_column_name: ${batch_column_name}
+     counts_column_name: ${counts_column_name}
+trainer:
+  pooling_method: 2
+
+accelerator: gpu
+file_name: delete
+max_length: 2048
+gradient_reversal_coefficient: 2
+input_file: /sci/backup/dandanbz/haya.benhayon/IBM/Seurat/Alpha_T1D_healthy/binned_vs_continues/run4_alpha_cells_RNA_metadata_codinggenes.h5ad
+working_dir: /sci/backup/dandanbz/haya.benhayon/IBM/predict_biomed/test_4_9/
+checkpoint: null
+target_column_name: Condition
+batch_column_name: sample
+counts_column_name: nFeature_RNA
+pooling_method: 2

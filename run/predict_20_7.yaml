@@ -1,0 +1,39 @@
+defaults:
+  - data_module: base_seq_cls
+  - task: predict
+  - _self_
+
+seed:
+  seed_value: 1234
+
+data_module:
+  _target_: bmfm_targets.datasets.HPAP.dataset_HPAP.DataModule
+  max_length: 1024
+  dataset_kwargs:
+    processed_data_source: ${input_file}
+    label_dict_path: /sci/backup/dandanbz/haya.benhayon/IBM/biomed-multi-omic/label_dict.json
+  limit_genes: protein_coding #could be null, protein_coding, or tokenizer
+  transform_datasets: false
+  collation_strategy: multitask
+  log_normalize_transform: true
+
+task:
+  checkpoint: ${checkpoint}
+  output_embeddings: true
+  output_predictions: true
+  default_root_dir: ${working_dir}
+  callbacks:
+   - _target_: bmfm_targets.training.callbacks.BatchIntegrationCallback
+     batch_column_name: ${batch_column_name}
+     
+     counts_column_name: ${counts_column_name}
+     benchmarking_methods: ["Unintegrated"]
+
+
+accelerator: gpu
+input_file: /sci/backup/dandanbz/haya.benhayon/IBM/Seurat/all_celltypes/run6_from_start_with_metadata_allcelltypes_minimal_codinggenes.h5ad
+working_dir: /sci/backup/dandanbz/haya.benhayon/IBM/predict_biomed/test/
+checkpoint: null
+
+batch_column_name: condition_alpha
+counts_column_name: ncounts

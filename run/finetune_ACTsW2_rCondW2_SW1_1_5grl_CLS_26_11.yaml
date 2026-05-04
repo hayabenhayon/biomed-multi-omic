@@ -1,0 +1,138 @@
+defaults:
+  - data_module: base_multi_task
+  - task: train
+  - model: scbert
+  - tokenizer: all_genes_v2
+  - fields: genes_expressions_cve_masked
+  - trainer: default
+  - _self_
+
+seed:
+  seed_value: 1234
+fields:
+  - _target_: bmfm_targets.config.FieldInfo
+    field_name: genes
+  - _target_: bmfm_targets.config.FieldInfo
+    field_name: expressions
+    is_masked: true
+    tokenization_strategy: continuous_value_encoder
+    encoder_kwargs:
+      kind: scale_adapt
+      n_sin_basis: 48
+      basis_scale: 1.5
+      trainable: true
+      zero_as_special_token: true
+    decode_modes:
+      regression: {}
+      is_zero: {}
+  - _target_: bmfm_targets.config.FieldInfo
+    field_name: label_expressions
+    is_input: false
+    is_masked: false
+    tokenization_strategy: continuous_value_encoder
+
+
+label_columns:
+  - _target_: bmfm_targets.config.LabelColumnInfo
+    label_column_name: "Condition"
+    is_regression_label: false
+    n_unique_values: 2
+    decode_from: 2
+  - _target_: bmfm_targets.config.LabelColumnInfo
+    label_column_name: "celltypes"
+    is_regression_label: false
+    n_unique_values: 5
+    decode_from: 1
+  - _target_: bmfm_targets.config.LabelColumnInfo
+    label_column_name: "sample"
+    is_regression_label: false
+    n_unique_values: 58
+    decode_from: 4
+  - _target_: bmfm_targets.config.LabelColumnInfo
+    label_column_name: "sample_from_Condition"
+    is_regression_label: false
+    n_unique_values: 58
+    decode_from: 2
+    gradient_reversal_coefficient: "${gradient_reversal_coefficient}"
+  - _target_: bmfm_targets.config.LabelColumnInfo
+    label_column_name: "Gender"
+    is_regression_label: false
+    n_unique_values: 2
+    decode_from: 3
+
+
+data_module:
+  max_length: 2048
+  batch_size: 16 
+  num_workers: 4
+  change_ratio: 0.1
+  rda_transform: auto_align
+  dataset_kwargs:
+    processed_data_source: ${input_file}
+    label_dict_path: /sci/backup/dandanbz/haya.benhayon/IBM/biomed-multi-omic/label_dict_subs.json
+    split_column_name: ${split_column_name}
+  limit_genes: protein_coding #could be null, protein_coding, or tokenizer
+  transform_datasets: false
+  collation_strategy: multitask
+  log_normalize_transform: true
+  balancing_label_column: 'Condition'
+
+tokenizer:
+  prepend_tokens:
+  - '[CLS]'
+  - '[CLS_CELL_TYPE]'
+  - '[CLS_DISEASE]'
+  - '[CLS_GENDER]'
+  - '[CLS_1]'
+
+trainer:
+  learning_rate: 1.0e-5
+  metrics:
+   - name: accuracy
+   - name: f1
+   - name: precision
+   - name: recall
+  losses:
+   - label_column_name: "Condition"
+     name: cross_entropy # focal also supported, or mse if column is a regression_label
+     weight: 2
+   - label_column_name: "sample_from_Condition"
+     name: cross_entropy # focal also supported, or mse if column is a regression_label
+     weight: 1
+   - label_column_name: "celltypes"
+     name: cross_entropy
+     weight: 2
+   - label_column_name: "sample"
+     name: cross_entropy
+     weight: 1
+   - label_column_name: "Gender"
+     name: cross_entropy
+     weight: 2
+   - field_name: expressions
+     name: mse
+     ignore_zero: true
+   - field_name: expressions
+     name: is_zero_bce
+  batch_prediction_behavior: track
+
+  
+track_clearml:
+  project_name: "ACTs_bmfm-CLS"
+  task_name: ${new_file_name}
+  continue_last_task: False
+
+
+file_name: delete
+L5O_sample: del
+new_file_name: ${file_name}
+accelerator: gpu
+input_file: null
+work_path: /tmp
+working_dir: ${work_path}/${new_file_name}
+checkpoint: /sci/backup/dandanbz/haya.benhayon/IBM/pretrained_biomed/CLS_tokens/preT_ACTsW2_condW2_SW1_CLS_23_11/last.ckpt
+split_column_name: split_random # a column with strings "train", "dev", "test"
+max_epochs: 30
+val_check_interval: 0.2 # see https://lightning.ai/docs/pytorch/stable/common/trainer.html#val-check-interva
+checkpoints_every_n_train_steps: null
+resume_training_from_ckpt: true
+gradient_reversal_coefficient: 1.5
